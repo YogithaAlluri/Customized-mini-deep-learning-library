@@ -63,6 +63,43 @@ class Tensor:
         return mul(self, other)
     def __matmul__(self, other):
         return matmul(self, other)
+    def backward(self, grad_output=None):
+        """
+    Compute gradients for all tensors in the computation graph.
+    """
+
+    # If this is the final scalar, gradient = 1
+    if grad_output is None:
+        grad_output = 1.0
+
+    # Initialize gradient for this tensor
+    self.grad = grad_output
+
+    # Stack for graph traversal
+    stack = [self]
+
+    while stack:
+        t = stack.pop()
+
+        # If no grad_fn, nothing to backpropagate
+        if t.grad_fn is None:
+            continue
+
+        # Call backward of the operation
+        grads = t.grad_fn.backward(t.grad)
+
+        # grads is a tuple: (grad_x, grad_y, ...)
+        for parent, grad in zip(t.parents, grads):
+
+            # Accumulate gradient
+            if parent.grad is None:
+                parent.grad = grad
+            else:
+                parent.grad += grad
+
+            # Continue backprop if parent has a grad_fn
+            if parent.grad_fn is not None:
+                stack.append(parent)
 
 
 
