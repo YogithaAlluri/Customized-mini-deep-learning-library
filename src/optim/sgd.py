@@ -16,7 +16,7 @@ class SGD:
             if p.grad is None:
                 continue
             # Gradient descent update
-            p.data -= self.lr * p.grad
+            p.data = p.data - self.lr * p.grad
 
     def zero_grad(self):
         """
