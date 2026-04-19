@@ -17,9 +17,9 @@ class Linear(Module):
         )
 
         # Initialize bias with zeros
-        self.bias = Parameter(
-            np.zeros(out_features)
-        )
+        self.bias = Parameter(np.zeros((out_features, 1)))
+            
+        
 
     def forward(self, x):
         out = x @ self.weight.T
