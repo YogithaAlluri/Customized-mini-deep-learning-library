@@ -90,5 +90,11 @@ class Tensor:
     def __matmul__(self, other):
         from core.ops.matmul import matmul
         return matmul(self, other)
+    
+    @property
+    def T(self):
+       return Tensor(self.data.T, requires_grad=self.requires_grad)
+
+
 
  

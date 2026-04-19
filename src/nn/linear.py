@@ -22,18 +22,13 @@ class Linear(Module):
         )
 
     def forward(self, x):
-        """
-        Compute the linear transformation.
-        x: Tensor of shape (batch_size, in_features)
-        """
-        # x @ W^T
-        out = x.data @ self.weight.data.T
+        out = x @ self.weight.T
+        out = out + self.bias
+        return out
+        
+        
 
-        # Add bias
-        out = out + self.bias.data
 
-        # Wrap output in a Tensor (no autograd yet)
-        from core.tensor import Tensor
-        return Tensor(out, requires_grad=x.requires_grad)
+        
 
 
