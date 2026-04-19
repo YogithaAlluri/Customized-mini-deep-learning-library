@@ -4,16 +4,27 @@ from core.tensor import Tensor
 
 class MSELoss(Module):
     def forward(self, y_pred, y_true):
-        diff = y_pred - y_true      # (4,1)
-        sq = diff * diff            # (4,1)
+        # Tensor operations (keeps graph)
+        diff = y_pred - y_true          # (N,1)
+        sq = diff * diff                # (N,1)
 
-        # Compute mean as a scalar
-        mean_value = 1.0 / sq.data.size
-        mean_tensor = Tensor(mean_value, requires_grad=False)
+        # Mean factor (scalar)
+        mean = Tensor(1.0 / sq.data.size, requires_grad=False)
 
-        # Reduce to scalar
-        loss = (sq * mean_tensor)   # still (4,1)
-        return Tensor(np.sum(loss.data), requires_grad=True)
+        # Elementwise mean
+        reduced = sq * mean             # (N,1)
+
+        # ---- Reduce to scalar WITHOUT breaking graph ----
+        # We manually sum elements using Tensor addition
+        total = None
+        flat = reduced.data.flatten()
+
+        for i in range(len(flat)):
+            elem = Tensor(flat[i], requires_grad=True)
+            total = elem if total is None else total + elem
+
+        return total
+
 
 
 
