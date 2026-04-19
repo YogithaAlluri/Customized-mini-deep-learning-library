@@ -6,12 +6,11 @@ class MSELoss(Module):
         diff = y_pred - y_true      # (N,1)
         sq = diff * diff            # (N,1)
 
-        # Mean factor
+        # Mean factor (scalar Tensor)
         mean = Tensor(1.0 / sq.data.size, requires_grad=False)
         reduced = sq * mean         # (N,1)
 
         # ---- Proper reduction to scalar ----
-        # Start with a zero Tensor
         total = Tensor(0.0, requires_grad=True)
 
         # Sum using Tensor addition (keeps graph)
@@ -25,6 +24,7 @@ class MSELoss(Module):
             total = total + elem    # accumulate
 
         return total
+
 
 
 
