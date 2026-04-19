@@ -17,6 +17,7 @@ def add(x, y):
     Perform x + y with autograd support.
     """
     # Forward pass
+    from core.tensor import Tensor
     out_data = x.data + y.data
 
     # Create output tensor

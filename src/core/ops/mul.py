@@ -27,6 +27,7 @@ def mul(x, y):
     out_data = x.data * y.data
 
     # Create output tensor
+    from core.tensor import Tensor
     out = Tensor(out_data, requires_grad=(x.requires_grad or y.requires_grad))
 
     # Attach grad function
