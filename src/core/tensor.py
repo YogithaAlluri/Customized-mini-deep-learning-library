@@ -53,7 +53,7 @@ class Tensor:
         return Tensor(self.data, requires_grad=False)
     def set_grad_fn(self, grad_fn, parents):
         self.grad_fn = grad_fn
-    self.parents = parents
+        self.parents = parents
     
     def __add__(self, other):
         from core.ops.add import add
