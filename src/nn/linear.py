@@ -1,30 +1,27 @@
 import numpy as np
-from core.parameter import Parameter
+from core.tensor import Tensor
 from .module import Module
 
 
 class Linear(Module):
-    """
-    A fully connected linear layer: y = xW^T + b
-    """
-
     def __init__(self, in_features, out_features):
         super().__init__()
-
-        # Initialize weights with small random values
-        self.weight = Parameter(
-            np.random.randn(out_features, in_features) * 0.01
+        self.weight = Tensor(
+            np.random.randn(out_features, in_features),
+            requires_grad=True
+        )
+        self.bias = Tensor(
+            np.zeros((out_features, 1)),
+            requires_grad=True
         )
 
-        # Initialize bias with zeros
-        self.bias = Parameter(np.zeros((out_features, 1)))
-            
-        
-
-    def forward(self, x):
-        out = x @ self.weight.T
+    def forward(self, x: Tensor):
+        # CORRECT ORIENTATION:
+        # (out_features, in_features) @ (in_features, 1)
+        out = self.weight @ x
         out = out + self.bias
         return out
+
         
         
 
