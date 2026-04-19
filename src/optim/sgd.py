@@ -1,9 +1,27 @@
-from .optimizer import Optimizer
+class SGD:
+    """
+    Stochastic Gradient Descent optimizer.
+    Updates parameters using: param -= lr * param.grad
+    """
 
-class SGD(Optimizer):
-    def __init__(self, params, lr, momentum=0.0):
-        super().__init__(params, lr)
-        self.momentum = momentum
+    def __init__(self, parameters, lr=0.01):
+        self.parameters = parameters
+        self.lr = lr
 
     def step(self):
-        pass
+        """
+        Update all parameters.
+        """
+        for p in self.parameters:
+            if p.grad is None:
+                continue
+            # Gradient descent update
+            p.data -= self.lr * p.grad
+
+    def zero_grad(self):
+        """
+        Reset gradients of all parameters.
+        """
+        for p in self.parameters:
+            p.zero_grad()
+
