@@ -2,18 +2,15 @@ import numpy as np
 from .module import Module
 from core.tensor import Tensor
 
-
 class MSELoss(Module):
-    """
-    Mean Squared Error loss:
-    loss = mean((y_pred - y_true)^2)
-    """
-
     def forward(self, y_pred, y_true):
-        # Compute squared difference
-        diff = y_pred.data - y_true.data
-        loss_value = np.mean(diff ** 2)
+        diff = y_pred - y_true      # Tensor subtraction
+        sq = diff * diff            # Tensor multiplication
 
-        # Wrap in a Tensor
-        return Tensor(loss_value, requires_grad=y_pred.requires_grad)
+        # Compute mean using Tensor ops
+        mean_factor = Tensor(1.0 / sq.data.size, requires_grad=False)
+        loss = sq * mean_factor     # Tensor * Tensor keeps graph
+
+        return loss
+
 
