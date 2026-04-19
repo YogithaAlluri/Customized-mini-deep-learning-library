@@ -1,5 +1,7 @@
 import numpy as np
 from core.ops.add import add
+from core.ops.mul import mul
+
 
 
 
@@ -55,6 +57,9 @@ class Tensor:
     
     def __add__(self, other):
         return add(self, other)
+    def __mul__(self, other):
+        return mul(self, other)
+
 
 
 
