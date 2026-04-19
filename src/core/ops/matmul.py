@@ -1,40 +1,41 @@
 import numpy as np
-from core.grad_function import GradFunction
+from core.tensor import Tensor
 
 
-
-class MatMul(GradFunction):
-    """
-    Gradient function for matrix multiplication: z = x @ y
-    """
+class MatMulBackward:
+    def __init__(self, x: Tensor, y: Tensor):
+        self.x = x
+        self.y = y
 
     def backward(self, grad_output):
-        x, y = self.saved_tensors
+        """
+        out = x @ y
+        x: (N, K)
+        y: (K, M)
+        out: (N, M)
+        grad_output: dL/dout, shape (N, M)
+        """
 
-        # dz/dx = grad_output @ y.T
-        grad_x = grad_output @ y.data.T
+        # dL/dx = dL/dout @ y.T
+        grad_x = grad_output @ self.y.data.T
 
-        # dz/dy = x.T @ grad_output
-        grad_y = x.data.T @ grad_output
+        # dL/dy = x.T @ dL/dout
+        grad_y = self.x.data.T @ grad_output
 
-        return grad_x, grad_y
+        return (grad_x, grad_y)
 
 
-def matmul(x, y):
+def matmul(x: Tensor, y: Tensor) -> Tensor:
     """
-    Perform x @ y with autograd support.
+    Matrix multiplication with autograd support:
+    out = x @ y
     """
-    # Forward pass
     out_data = x.data @ y.data
+    requires_grad = x.requires_grad or y.requires_grad
 
-    # Create output tensor
-    from core.tensor import Tensor
-    out = Tensor(out_data, requires_grad=(x.requires_grad or y.requires_grad))
+    out = Tensor(out_data, requires_grad=requires_grad)
 
-    # Attach grad function
-    if out.requires_grad:
-        grad_fn = MatMul()
-        grad_fn.save_for_backward(x, y)
-        out.set_grad_fn(grad_fn, parents=[x, y])
+    if requires_grad:
+        out.set_grad_fn(MatMulBackward(x, y), [x, y])
 
     return out
