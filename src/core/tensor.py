@@ -1,4 +1,6 @@
 import numpy as np
+from core.ops.add import add
+
 
 
 class Tensor:
@@ -50,5 +52,9 @@ class Tensor:
     def set_grad_fn(self, grad_fn, parents):
         self.grad_fn = grad_fn
     self.parents = parents
+    
+    def __add__(self, other):
+        return add(self, other)
+
 
 
