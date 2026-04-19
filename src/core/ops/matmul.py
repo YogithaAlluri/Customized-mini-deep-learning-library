@@ -6,7 +6,7 @@ class MatMulBackward:
     def __init__(self, x: Tensor, y: Tensor):
         self.x = x
         self.y = y
-        # cache output shape: shape of x @ y
+        # Cache the output shape of x @ y
         self.out_shape = (x.data @ y.data).shape
 
     def backward(self, grad_output):
@@ -18,10 +18,10 @@ class MatMulBackward:
         grad_output: dL/dout, should be (N, M)
         """
 
-        # Ensure NumPy array
+        # Convert to NumPy array
         grad_output = np.array(grad_output, dtype=float)
 
-        # If scalar or wrong shape, broadcast to out_shape
+        # If scalar or wrong shape → broadcast to out_shape
         if grad_output.shape != self.out_shape:
             grad_output = np.ones(self.out_shape, dtype=float) * grad_output
 
