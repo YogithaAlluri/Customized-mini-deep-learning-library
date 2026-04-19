@@ -1,7 +1,5 @@
 import numpy as np
-from core.ops.add import add
-from core.ops.mul import mul
-from core.ops.matmul import matmul
+
 
 
 
@@ -58,11 +56,17 @@ class Tensor:
     self.parents = parents
     
     def __add__(self, other):
+        from core.ops.add import add
         return add(self, other)
+
     def __mul__(self, other):
-        return mul(self, other)
+       from core.ops.mul import mul
+       return mul(self, other)
+
     def __matmul__(self, other):
-        return matmul(self, other)
+       from core.ops.matmul import matmul
+       return matmul(self, other)
+
     def backward(self, grad_output=None):
         """
     Compute gradients for all tensors in the computation graph.
