@@ -1,4 +1,3 @@
-import numpy as np
 from .module import Module
 from core.tensor import Tensor
 
@@ -7,19 +6,24 @@ class MSELoss(Module):
         diff = y_pred - y_true
         sq = diff * diff
 
-        # Mean factor
         mean = Tensor(1.0 / sq.data.size, requires_grad=False)
         reduced = sq * mean  # (N,1)
 
-        # ---- Reduce to scalar WITHOUT breaking graph ----
-        # We multiply each element by a Tensor(1) to keep graph
-        total = None
+        # Proper reduction: multiply by Tensor(1) to keep graph
+        total = Tensor(0.0, requires_grad=True)
+
+        # Loop through rows
         for i in range(reduced.data.shape[0]):
-            elem_value = reduced.data[i, 0]
-            elem = Tensor(elem_value, requires_grad=True)
-            total = elem if total is None else total + elem
+            # Create a mask row: 1 at row i, 0 elsewhere
+            mask_data = (reduced.data * 0)
+            mask_data[i, 0] = 1.0
+            mask = Tensor(mask_data, requires_grad=False)
+
+            elem = reduced * mask   # picks out row i as a Tensor
+            total = total + elem    # accumulate using Tensor ops
 
         return total
+
 
 
 
