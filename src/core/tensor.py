@@ -47,5 +47,8 @@ class Tensor:
         Useful when you want to break the computation graph.
         """
         return Tensor(self.data, requires_grad=False)
+    def set_grad_fn(self, grad_fn, parents):
+        self.grad_fn = grad_fn
+    self.parents = parents
 
 
