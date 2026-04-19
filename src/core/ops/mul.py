@@ -1,5 +1,5 @@
 from core.grad_function import GradFunction
-from core.tensor import Tensor
+
 
 
 class Mul(GradFunction):

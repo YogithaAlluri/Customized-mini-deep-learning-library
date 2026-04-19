@@ -1,6 +1,6 @@
 import numpy as np
 from core.grad_function import GradFunction
-from core.tensor import Tensor
+
 
 
 class MatMul(GradFunction):
