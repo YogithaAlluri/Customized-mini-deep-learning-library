@@ -90,6 +90,12 @@ class Tensor:
     def __matmul__(self, other):
         from core.ops.matmul import matmul
         return matmul(self, other)
+    def __sub__(self, other):
+        from core.ops.add import add
+        from core.ops.mul import mul
+        return add(self, mul(other, Tensor(-1.0)))
+
+
     
     @property
     def T(self):
