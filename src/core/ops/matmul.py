@@ -1,51 +1,30 @@
 import numpy as np
+from core.grad_function import GradFunction
 from core.tensor import Tensor
 
-
-class MatMulBackward:
-    def __init__(self, x: Tensor, y: Tensor):
-        self.x = x
-        self.y = y
-        # Cache the output shape of x @ y
-        self.out_shape = (x.data @ y.data).shape
-
+class MatMul(GradFunction):
     def backward(self, grad_output):
-        """
-        out = x @ y
-        x: (N, K)
-        y: (K, M)
-        out: (N, M)
-        grad_output: dL/dout, should be (N, M)
-        """
+        x, y = self.saved_tensors
 
-        # Convert to NumPy array
-        grad_output = np.array(grad_output, dtype=float)
+        # dL/dx = grad_output @ y.T
+        grad_x = grad_output @ y.data.T
 
-        # If scalar or wrong shape → broadcast to out_shape
-        if grad_output.shape != self.out_shape:
-            grad_output = np.ones(self.out_shape, dtype=float) * grad_output
+        # dL/dy = x.data.T @ grad_output
+        grad_y = x.data.T @ grad_output
 
-        # dL/dx = dL/dout @ y.T
-        grad_x = grad_output @ self.y.data.T
-
-        # dL/dy = x.T @ dL/dout
-        grad_y = self.x.data.T @ grad_output
-
-        return (grad_x, grad_y)
+        return grad_x, grad_y
 
 
-def matmul(x: Tensor, y: Tensor) -> Tensor:
-    """
-    Matrix multiplication with autograd support:
-    out = x @ y
-    """
+def matmul(x, y):
     out_data = x.data @ y.data
     requires_grad = x.requires_grad or y.requires_grad
 
     out = Tensor(out_data, requires_grad=requires_grad)
 
     if requires_grad:
-        out.set_grad_fn(MatMulBackward(x, y), [x, y])
+        grad_fn = MatMul()
+        grad_fn.save_for_backward(x, y)
+        out.set_grad_fn(grad_fn, parents=[x, y])
 
     return out
 
