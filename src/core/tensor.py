@@ -1,25 +1,16 @@
 import numpy as np
 
-
 class Tensor:
     def __init__(self, data, requires_grad=False):
-        """
-        A minimal Tensor class that wraps a NumPy array and
-        optionally tracks gradients.
-        """
-        # Store the actual numerical data as a NumPy array
-        self.data = np.array(data, dtype=float)
+        # Ensure data is a float numpy array
+        if isinstance(data, (int, float, list)):
+            self.data = np.array(data, dtype=float)
+        else:
+            self.data = data.astype(float)
 
-        # Whether this tensor should track gradients
         self.requires_grad = requires_grad
-
-        # This will hold the gradient of some scalar loss w.r.t this tensor
         self.grad = None
-
-        # This will later point to a GradFunction that created this tensor
         self.grad_fn = None
-
-        # Parents in the computation graph
         self.parents = []
 
     def zero_grad(self):
@@ -40,67 +31,83 @@ class Tensor:
     # -----------------------------
     def backward(self, grad_output=None):
         """
-        Compute gradients for all tensors in the computation graph.
+        Compute gradients using Topological Sort to ensure correct accumulation.
         """
-
-        # If this is the final scalar, gradient = 1
+        # If this is the starting scalar (Loss), gradient is 1.0
         if grad_output is None:
-            grad_output = 1.0
+            if self.data.size > 1:
+                raise RuntimeError("Backward can only be called on a scalar (size 1) without grad_output.")
+            grad_output = np.ones_like(self.data)
 
-        # Initialize gradient for this tensor
         self.grad = grad_output
 
-        # Stack for graph traversal
-        stack = [self]
+        # 1. Build the topological order of the graph
+        topo = []
+        visited = set()
 
-        while stack:
-            t = stack.pop()
+        def build_topo(v):
+            if v not in visited:
+                visited.add(v)
+                # Traverse parents first
+                for parent in v.parents:
+                    build_topo(parent)
+                topo.append(v)
 
-            # If no grad_fn, nothing to backpropagate
-            if t.grad_fn is None:
+        build_topo(self)
+
+        # 2. Process nodes in reverse topological order (backwards)
+        for v in reversed(topo):
+            if v.grad_fn is None:
                 continue
 
-            # Call backward of the operation
-            grads = t.grad_fn.backward(t.grad)
+            # Call the backward operation of the specific GradFunction
+            # This should return a tuple of gradients (one for each parent)
+            grads = v.grad_fn.backward(v.grad)
 
-            # grads is a tuple: (grad_x, grad_y, ...)
-            for parent, grad in zip(t.parents, grads):
+            # Standardize grads into a tuple if it's a single array
+            if not isinstance(grads, (tuple, list)):
+                grads = (grads,)
 
-                # Accumulate gradient
-                if parent.grad is None:
-                    parent.grad = grad
-                else:
-                    parent.grad += grad
-
-                # Continue backprop if parent has a grad_fn
-                if parent.grad_fn is not None:
-                    stack.append(parent)
+            # Accumulate gradients into parents
+            for parent, grad in zip(v.parents, grads):
+                if parent.requires_grad:
+                    if parent.grad is None:
+                        # Use np.copy to prevent accidental in-place mutations across paths
+                        parent.grad = np.array(grad, copy=True)
+                    else:
+                        # Accumulate: dL/dx = sum(dL/dy * dy/dx)
+                        parent.grad += grad
 
     # -----------------------------
-    # OPERATORS
+    # OPERATORS (Updated with better import handling)
     # -----------------------------
     def __add__(self, other):
         from core.ops.add import add
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
         return add(self, other)
 
     def __mul__(self, other):
         from core.ops.mul import mul
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
         return mul(self, other)
 
     def __matmul__(self, other):
         from core.ops.matmul import matmul
         return matmul(self, other)
+
     def __sub__(self, other):
-        from core.ops.add import add
-        from core.ops.mul import mul
-        return add(self, mul(other, Tensor(-1.0)))
+        # x - y is equivalent to x + (-1 * y)
+        if not isinstance(other, Tensor):
+            other = Tensor(other)
+        return self + (other * -1.0)
 
-
-    
     @property
     def T(self):
-       return Tensor(self.data.T, requires_grad=self.requires_grad)
+        # NOTE: For a perfect autograd, this should be a GradFunction (Transpose)
+        # However, this returns a new Tensor for basic usage.
+        return Tensor(self.data.T, requires_grad=self.requires_grad)
 
-
-
- 
+    def __repr__(self):
+        return f"Tensor({self.data}, requires_grad={self.requires_grad})"
